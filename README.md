@@ -65,17 +65,6 @@ npm run dev
 
 Open `http://localhost:5173`
 
-## Project Structure
-linguanext/
-├── data/
-│ ├── raw/ # Source corpora
-│ └── processed/ # Saved vocabularies
-├── notebooks/ # Training pipeline (documented)
-├── model/
-│ ├── saved/ # Trained .pth files
-├── backend/ # FastAPI app
-└── frontend/ # React UI
-
 ## What I Learned
 
 - Why LSTMs struggle with long-range dependencies (motivation for Transformers)
