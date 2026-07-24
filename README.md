@@ -43,8 +43,8 @@ User Input → Language Detection → LSTM Inference → Top-3 Predictions
 
 | Model      | Final Loss | Perplexity |
 |------------|------------|------------|
-| English    | ~4.3       | ~75        |
-| Roman Urdu | ~4.1       | ~60        |
+| English    | 4.190      | 66.02      |
+| Roman Urdu | 2.831      | 16.97      |
 
 ## Run Locally
 
