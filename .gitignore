@@ -1,0 +1,9 @@
+venv/
+__pycache__/
+*.pth
+*.pyc
+.env
+node_modules/
+dist/
+.DS_Store
+data/raw/
