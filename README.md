@@ -1,73 +1,89 @@
-# LinguaNext 🔤
+# LinguaNext
 
-> LSTM-powered next-word prediction for English and Roman Urdu.
+**LSTM next-word prediction for English and Roman Urdu**, with a PyTorch model, FastAPI backend, and React interface. Type a phrase and select a suggested word to continue writing.
 
-![Python](https://img.shields.io/badge/Python-3.10+-blue)
-![PyTorch](https://img.shields.io/badge/PyTorch-2.0-orange)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-green)
-![React](https://img.shields.io/badge/React-18-61DAFB)
+Roman Urdu is Urdu written using the Latin alphabet. This project explores word-level sequence modeling for informal text alongside an English model.
 
-## What It Does
+## Model and inference
 
-LinguaNext predicts the next word as you type — supporting both English
-and Roman Urdu, with automatic language detection. Click any suggestion
-to append it and keep typing, just like a mobile keyboard.
+| Setting | Value |
+| --- | --- |
+| Model | Word-level LSTM |
+| Embedding dimension | 256 |
+| Hidden dimension | 512 |
+| Recurrent layers | 2 |
+| Dropout | 0.3 in the backend model definition |
+| Input context | Last 10 tokens, left-padded for shorter inputs |
+| Default suggestions | Top 3 words |
 
-## Why This Project
+The backend uses a small Roman Urdu keyword set for automatic language selection. The API also accepts an explicit language choice. The detector is a heuristic and can misclassify short or code-switched text.
 
-Most NLP demos only support English. Roman Urdu is spoken by 200M+
-people but severely underrepresented in NLP tooling. This project
-explores what sequence modeling looks like for a low-resource,
-informal language written in Latin script.
+## Recorded experiments
 
-## Architecture
+The original project documentation describes English training with WikiText-2 and Roman Urdu training with a social-media corpus, using Adam and cross-entropy loss for 25 epochs.
 
-User Input → Language Detection → LSTM Inference → Top-3 Predictions
+| Model | Recorded final loss | Recorded perplexity |
+| --- | ---: | ---: |
+| English | 4.190 | 66.02 |
+| Roman Urdu | 2.831 | 16.97 |
 
-- **Model:** Word-level LSTM (2 layers, 512 hidden dim, 256 embedding dim)
-- **English:** Trained on WikiText-2 (~30K sentences)
-- **Roman Urdu:** Trained on social media corpus (~13K sentences)
-- **Sequence length:** 10 tokens
-- **Training:** 25 epochs, Adam optimizer, CrossEntropy loss
+The original result table does not identify whether these values come from training, validation, or held-out testing. They are preserved as recorded values and should not be presented as verified test performance until the evaluation split and calculation are documented.
 
-## Tech Stack
+Perplexities across different languages, corpora, and vocabularies are not directly comparable measures of model quality.
 
-| Layer     | Tech                    |
-|-----------|-------------------------|
-| Model     | PyTorch                 |
-| Backend   | FastAPI + Uvicorn       |
-| Frontend  | React + Tailwind CSS    |
-| Language Detection | Rule-based + langdetect |
+## Required artifacts
 
-## Results
+Before starting the backend, provide the matching trained weights and vocabularies at these paths:
 
-| Model      | Final Loss | Perplexity |
-|------------|------------|------------|
-| English    | 4.190      | 66.02      |
-| Roman Urdu | 2.831      | 16.97      |
+- `model/saved/english_lstm.pth`
+- `model/saved/roman_urdu_lstm.pth`
+- `data/processed/english_vocab.json`
+- `data/processed/roman_urdu_vocab.json`
 
-## Run Locally
+The vocabulary JSON files must contain `word2idx` and `idx2word`. The backend currently constructs each model with a vocabulary size of 5,000, so model dimensions, vocabulary indices, and checkpoints must match.
 
-### Backend
+The backend loads these artifacts at startup. It cannot start successfully without them. Refer to `notebooks/` for the training work; artifact acquisition and exact training-data provenance still need to be documented for full reproduction.
+
+## Run locally
+
 ```bash
-python -m venv venv
-venv\Scripts\activate
+git clone https://github.com/mtaimoor1407/LinguaNext.git
+cd LinguaNext
+python -m venv .venv
+```
+
+Activate with `.venv\Scripts\activate` on Windows or `source .venv/bin/activate` on macOS/Linux.
+
+```bash
 pip install -r backend/requirements.txt
 uvicorn backend.main:app --reload --port 8000
 ```
 
-### Frontend
+In another terminal:
+
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-Open `http://localhost:5173`
+Open the frontend URL printed by Vite, normally [localhost:5173](http://localhost:5173). Keep the backend running.
 
-## What I Learned
+## API
 
-- Why LSTMs struggle with long-range dependencies (motivation for Transformers)
-- Word-level vs character-level tradeoffs
-- Serving PyTorch models via REST API
-- Handling low-resource, code-switched language data
+| Endpoint | Purpose |
+| --- | --- |
+| `GET /` | Service status |
+| `GET /health` | Health and inference device |
+| `POST /predict` | Next-word suggestions |
+| `POST /detect-language` | Rule-based language selection |
+
+The backend uses CUDA when available and otherwise runs on CPU.
+
+## Limitations and next evaluation
+
+Word-level models struggle with unseen words and spelling variation. The current cleaning rule keeps Latin letters and spaces, removing punctuation, digits, and Native Urdu characters. Short context and keyword-based language selection limit long-range and mixed-language predictions.
+
+A stronger evaluation should document corpus provenance, preprocessing, vocabulary construction, deduplication, data splits, and random seeds, then report held-out perplexity and top-1/top-3 accuracy against a simple n-gram baseline.
+
+**Tools:** Python, PyTorch, FastAPI, React, Tailwind CSS.
